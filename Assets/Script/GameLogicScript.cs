@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
 
@@ -8,9 +9,12 @@ public class GameLogicScript : MonoBehaviour
 {
 
     public GameObject gameOverUI;
+    public TileBase ghost;
     public Tilemap boardTilemap;
-    public Tilemap next1Tilemap;
-    public Tilemap next2Tilemap;
+    public GameObject next1Area;
+    private GameObject currentNext1Prefab;
+    public GameObject next2Area;
+    private GameObject currentNext2Prefab;
     public Vector3Int initPiecePosition;
     public float fallInterval;
     public float hitBottomInterval;
@@ -23,6 +27,9 @@ public class GameLogicScript : MonoBehaviour
 
     [SerializeField]
     public TetrominoEntry[] tiles;
+    [SerializeField]
+    public TetrominoPrefab[] prefabs;
+    private Dictionary<TetrominoShape, int> prefabMap = new Dictionary<TetrominoShape, int>();
     private float autoFallTimer = 0f;
     private Piece currentPiece;
     private Piece next1;
@@ -42,12 +49,64 @@ public class GameLogicScript : MonoBehaviour
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start() {
+        // currentPiece = new(tiles);
+        // currentPiecePosition = new Vector3Int(-4, -10, 0);
+        // updateTilemap(boardTilemap, currentPiecePosition, currentPiece);
+        // return;
+        for (int i = 0; i < prefabs.Length; i++) {
+            prefabMap[prefabs[i].shape] = i;
+        }
         Debug.Log("start game logic");
         spawnNewPiece();
     }
 
+    // void markMost(Vector3Int direction) {
+    //     Vector3Int[] leftMost = currentPiece.leftMostPosition();
+    //     Vector3Int[] rightMost = currentPiece.rightMostPosition();
+    //     Vector3Int[] downMost = currentPiece.downMostPosition();
+
+    //     if (direction == Vector3Int.left) {
+    //         for (int i = 0; i < leftMost.Length; i++) { 
+    //             boardTilemap.SetTile(leftMost[i] + currentPiecePosition, ghost);
+    //         }
+    //     }
+    //     if (direction == Vector3Int.right) {
+    //         for (int i = 0; i < rightMost.Length; i++) { 
+    //             boardTilemap.SetTile(rightMost[i] + currentPiecePosition, ghost);
+    //         }
+    //     }
+    //     if (direction == Vector3Int.down) {
+    //         for (int i = 0; i < downMost.Length; i++) { 
+    //             boardTilemap.SetTile(downMost[i] + currentPiecePosition, ghost);
+    //         }
+    //     }
+    // }
+
     // Update is called once per frame
     void Update() {
+        // if (Input.GetKeyDown(KeyCode.Q)) {
+        //     Vector3Int[] orgPosition = currentPiece.getPosition().Select(p => p + currentPiecePosition).ToArray();
+        //     for (int i = 0; i < orgPosition.Length; i++) {
+        //         boardTilemap.SetTile(orgPosition[i], null);
+        //     }
+        //     currentPiece = new(tiles);
+        //     updateTilemap(boardTilemap, currentPiecePosition, currentPiece);
+        // }
+        // //变换形
+        // if (Input.GetKeyDown(lRotKey)) {
+        //     rotatePiece(Vector3Int.left);
+        //     markMost(Vector3Int.left);
+        // }
+        // if (Input.GetKeyDown(rRotKey)) {
+        //     rotatePiece(Vector3Int.right);
+        //     markMost(Vector3Int.left);
+        // }
+        // if (Input.GetKeyDown(KeyCode.L)) {
+        //     rotatePiece(Vector3Int.right);
+        //     rotatePiece(Vector3Int.right);
+        //     markMost(Vector3Int.left);
+        // }
+        // return;
         if (!isAlive) {
             return;
         }
@@ -93,12 +152,17 @@ public class GameLogicScript : MonoBehaviour
 
 
     private void rotatePiece(Vector3Int direction) {
+        Vector3Int[] orgPosition = currentPiece.getPosition().Select(p => p + currentPiecePosition).ToArray();
+        for (int i = 0; i < orgPosition.Length; i++) {
+            boardTilemap.SetTile(orgPosition[i], null);
+        }
         currentPiece.rotate(direction);
+        updateTilemap(boardTilemap, currentPiecePosition, currentPiece);
     }
 
     private void dropPiece() {
         Vector3Int[] downMostPosition = currentPiece.downMostPosition().Select(p => p + currentPiecePosition + Vector3Int.down).ToArray();
-        Vector3Int[] position = currentPiece.position.Select(p => p + currentPiecePosition).ToArray();
+        Vector3Int[] position = currentPiece.getPosition().Select(p => p + currentPiecePosition).ToArray();
         while (true) {
             if (downMostPosition.Any(p => p.y < -10 || boardTilemap.HasTile(p))) {
                 break;
@@ -122,8 +186,16 @@ public class GameLogicScript : MonoBehaviour
 
     
     private void movePiece(Vector3Int direction) {
-        Vector3Int[] position = currentPiece.position.Select(p => p + currentPiecePosition).ToArray();
+        Vector3Int[] position = currentPiece.getPosition().Select(p => p + currentPiecePosition).ToArray();
         //左移，不能碰壁，不能碰到其他方块
+        // if (direction == Vector3Int.left && currentPiece.shape == TetrominoShape.O) {
+        //     Debug.Log("left");
+        //     Vector3Int[] leftMost = currentPiece.leftMostPosition();
+        //     for (int i = 0; i < leftMost.Length; i++) {
+        //         boardTilemap.SetTile(leftMost[i] + currentPiecePosition, ghost);
+        //     }
+        //     Debug.Log($"leftMostCanMove: {currentPiece.leftMostPosition().Select(p => p + currentPiecePosition + direction).All(p => !boardTilemap.HasTile(p))}");
+        // }
         if (direction == Vector3Int.left && position.All(p => p.x > -5)
             && currentPiece.leftMostPosition().Select(p => p + currentPiecePosition + direction).All(p => !boardTilemap.HasTile(p))) {
 
@@ -172,18 +244,26 @@ public class GameLogicScript : MonoBehaviour
         Piece newPiece = new(tiles);
         currentPiece = next1;
 
-        for (int i = 0; i < next1.position.Length; i++) {
-            next1Tilemap.SetTile(next1.position[i], null);
-        }
-        for (int i = 0; i < next2.position.Length; i++) {
-            next2Tilemap.SetTile(next2.position[i], null);
-        }
         next1 = next2;
         next2 = newPiece;
 
+        if (currentNext1Prefab != null) {
+            Destroy(currentNext1Prefab);
+        }
+        if (currentNext2Prefab != null) {
+            Destroy(currentNext2Prefab);
+        }
+
         updateTilemap(boardTilemap, initPiecePosition, currentPiece, true);
-        updateTilemap(next1Tilemap, Vector3Int.zero, next1);
-        updateTilemap(next2Tilemap, Vector3Int.zero, next2);
+        //放置预览
+        currentNext1Prefab = Instantiate(prefabs[prefabMap[next1.shape]].prefab);
+        currentNext2Prefab = Instantiate(prefabs[prefabMap[next2.shape]].prefab);
+        currentNext1Prefab.transform.SetParent(next1Area.transform);
+        currentNext1Prefab.transform.position = next1Area.transform.position;
+        currentNext1Prefab.transform.localScale = new Vector3(0.8f, 0.8f, 0);
+        currentNext2Prefab.transform.SetParent(next2Area.transform);
+        currentNext2Prefab.transform.position = next2Area.transform.position;
+        currentNext2Prefab.transform.localScale = new Vector3(0.8f, 0.8f, 0);
     }
 
     private bool hitBottomHit() {
@@ -194,7 +274,7 @@ public class GameLogicScript : MonoBehaviour
         }
         hitBottomTimer = 0f;
         //判断是否到达底部
-        Vector3Int[] position = currentPiece.position.Select(p => p + currentPiecePosition + Vector3Int.down).ToArray();
+        Vector3Int[] position = currentPiece.getPosition().Select(p => p + currentPiecePosition + Vector3Int.down).ToArray();
         if (position.Any(p => p.y < -10)
             || currentPiece.downMostPosition().Select(p => p + currentPiecePosition + Vector3Int.down).Any(p => boardTilemap.HasTile(p))) {
             
@@ -214,7 +294,7 @@ public class GameLogicScript : MonoBehaviour
     }
 
     private void updateTilemap(Tilemap tilemap, Vector3Int basePosition, Piece piece, bool checkConfilict = false) {
-        Vector3Int[] position = piece.position.Select(p => p + basePosition).ToArray();
+        Vector3Int[] position = piece.getPosition().Select(p => p + basePosition).ToArray();
         if (checkConfilict) {
             for (int i = 0; i < position.Length; i++) {
                 if (tilemap.HasTile(position[i])) {
@@ -244,4 +324,11 @@ public struct TetrominoEntry
 {
     public TetrominoShape shape;
     public TileBase tile;
+}
+
+[System.Serializable]
+public struct TetrominoPrefab
+{
+    public TetrominoShape shape;
+    public GameObject prefab;
 }
