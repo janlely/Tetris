@@ -13,10 +13,10 @@ public class Piece
         {TetrominoShape.I, new Vector3Int[]{new Vector3Int(0,1,0), new Vector3Int(0,0,0), new Vector3Int(0,-1,0), new Vector3Int(0,-2,0)} },
         {TetrominoShape.O, new Vector3Int[]{new Vector3Int(-1,0,0), new Vector3Int(0,0,0), new Vector3Int(0,-1,0), new Vector3Int(-1,-1,0)} },
         {TetrominoShape.J, new Vector3Int[]{new Vector3Int(0,1,0), new Vector3Int(0,0,0), new Vector3Int(0,-1,0), new Vector3Int(-1,-1,0)} },
-        {TetrominoShape.L, new Vector3Int[]{new Vector3Int(-1,1,0), new Vector3Int(-1,0,0), new Vector3Int(-1,-1,0), new Vector3Int(-1,0,0)} },
-        {TetrominoShape.S, new Vector3Int[]{new Vector3Int(0,0,0), new Vector3Int(1,0,0), new Vector3Int(-1,-1,0), new Vector3Int(-2,-1,0)} },
-        {TetrominoShape.T, new Vector3Int[]{new Vector3Int(0,0,0), new Vector3Int(1,-1,0), new Vector3Int(1,0,0), new Vector3Int(1,1,0)} },
-        {TetrominoShape.Z, new Vector3Int[]{new Vector3Int(-2,0,0), new Vector3Int(-1,0,0), new Vector3Int(0,-1,0), new Vector3Int(-1,-1,0)} },
+        {TetrominoShape.L, new Vector3Int[]{new Vector3Int(-1,1,0), new Vector3Int(-1,0,0), new Vector3Int(-1,-1,0), new Vector3Int(0,-1,0)} },
+        {TetrominoShape.S, new Vector3Int[]{new Vector3Int(1,0,0), new Vector3Int(0,0,0), new Vector3Int(0,-1,0), new Vector3Int(-1,-1,0)} },
+        {TetrominoShape.T, new Vector3Int[]{new Vector3Int(0,-1,0), new Vector3Int(-1,0,0), new Vector3Int(0,0,0), new Vector3Int(1,0,0)} },
+        {TetrominoShape.Z, new Vector3Int[]{new Vector3Int(-1,0,0), new Vector3Int(0,0,0), new Vector3Int(0,-1,0), new Vector3Int(-1,-1,0)} },
     };
 
     public TetrominoShape shape;
@@ -24,6 +24,7 @@ public class Piece
         int i = Random.Range(0, tiles.Length);
         position = positions[tiles[i].shape];
         tile = tiles[i].tile;
+        shape = tiles[i].shape;
     }
 
     public Vector3Int[] leftMostPosition() {
