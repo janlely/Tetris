@@ -176,11 +176,11 @@ public class Piece
                     case TetrominoShape.O:
                         return new Vector3Int[]{position[0], position[3]};
                     case TetrominoShape.J:
-                        return new Vector3Int[]{position[0], position[2], position[1]};
+                        return new Vector3Int[]{position[0], position[2], position[3]};
                     case TetrominoShape.L:
                         return new Vector3Int[]{position[0], position[1], position[2]};
                     case TetrominoShape.S:
-                        return new Vector3Int[]{position[0], position[2], position[3]};
+                        return new Vector3Int[]{position[1], position[3]};
                     case TetrominoShape.T:
                         return new Vector3Int[]{position[0], position[1]};
                     case TetrominoShape.Z:
@@ -372,27 +372,4 @@ public class Piece
         }
 
     }
-    //逆时针
-    // Vector3Int Rotate90DegreesCCW(Vector3Int position)
-    // {
-    //     //获取中心点的坐标，先放大10倍
-    //     int x = position.x * 10 + 5;
-    //     int y = position.y * 10 + 5;
-    //     //旋转
-    //     int x1 = (-y - 5) / 10;
-    //     int y1 = (x - 5) / 10;
-    //     return new Vector3Int(x1, y1, position.z);
-    // }
-
-    // //顺时针
-    // Vector3Int Rotate90DegreesCW(Vector3Int position)
-    // {
-    //     //获取中心点的坐标，先放大10倍
-    //     int x = position.x * 10 + 5;
-    //     int y = position.y * 10 + 5;
-    //     //旋转
-    //     int x1 = (y - 5) / 10;
-    //     int y1 = (-x - 5) / 10;
-    //     return new Vector3Int(x1, y1, position.z);
-    // }
 }
